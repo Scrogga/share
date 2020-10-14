@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+#TODO
+#Add error check for too early to check in.
+
 import os
 import sys
 import time
@@ -22,12 +25,12 @@ if len(sys.argv) != 1:
 print("Ensure flightNumber.txt is updated with the flight number.")
 
 options = FirefoxOptions()
-#options.add_argument("--headless")
-gd = os.path.abspath("./Dependencies\geckodriver")
+options.add_argument("--headless")
+gd = os.path.abspath("/home/scrogg/checkin/Dependencies/geckodriver")
 driver = webdriver.Firefox(options=options, executable_path=gd, service_log_path=os.path.devnull)
 
-flightNumber = open("./flightNumber.txt", "r").read()
-print("Checking in with flight number:", flightNumber + ".")
+flightNumber = open("/home/scrogg/checkin/flightNumber.txt", "r").read()
+print("Checking in with flight number:", flightNumber)
 
 def clickButton(selector, text):
         if selector == "xpath":
@@ -36,8 +39,11 @@ def clickButton(selector, text):
         elif selector == "class":
                 driverWait(selector, text)
                 driver.find_element_by_class_name(text).click()
+        elif selector == "id":
+                driverWait(selector, text)
+                driver.find_element_by_id(text).click()
         else:
-                print("Unknown selector, returning.")   
+                print("Unknown selector, returning.")
 
 def errorCheck(selector, error):
         if selector == "class":
@@ -63,18 +69,17 @@ def errorCheck(selector, error):
 
 def driverWait(selector, text):
         if selector == "class":
-                WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CLASS_NAME, text)))
+                WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, text)))
         elif selector == "id":
-                WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, text)))
+                WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, text)))
         elif selector == "xpath":
-                WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.xpath, "//button[contains(.,'" + text + "')]")))
+                WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[contains(.,'" + text + "')]")))
         else:
-           print("Unknown selector, returning.")     
-                
-        
+           print("Unknown selector, returning.")
+
 def pageOne():
         print('Starting page 1.')
-        
+
         #Open Starter page
         driver.get("https://www.qantas.com/au/en/travel-info/check-in.html")
 
@@ -90,40 +95,42 @@ def pageOne():
 
         #Error checks
         print("Checking for valid booking reference.")
+        time.sleep(1)
         errorCheck("class", "form-validation-summary")
 
 def pageTwo():
         print('Starting page 2.')
-        
+
         #Wait for page loaded
         driverWait("id", "ts-status-message-default")
         print("Page 2 loaded.")
-        
+
         #Error checks
         print("Checking if already checked in.")
         errorCheck("id", "un-checkin-button")
-        print("Checking if too early to check in.")
-        errorCheck("id", "ts-status-message-default")
+        #print("Checking if too early to check in.")
+        #errorCheck("id", "ts-status-message-default")
 
         #Wait for button clickable and continue.
         clickButton("xpath", "Continue")
 
 def pageThree():
 	print('Starting page 3.')
-	
+
 	#Wait for button clickable and continue.
 	clickButton("xpath", "Continue")
 	print("Page 3 loaded.")
 
 def pageFour():
 	print('Starting page 4.')
-	
+
         #Check page is clickable
-	clickButton("id", "noBTN")
+	clickButton("id", "noBtn")
 	print("Page 4 loaded.")
-	
+
 	#Wait for button clickable and continue.
 	clickButton("xpath", "Check")
+	print("Last page complete.")
 
 def main():
 	pageOne()
